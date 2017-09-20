@@ -6,6 +6,8 @@ from operator import add
 from pyspark.mllib.linalg import Vectors, ArrayType
 import numpy as np
 
+sc = pyspark.context.SparkContext.getOrCreate()
+
 def ndarr_to_coord_array(arr):
     entries = []
     for i in range(len(arr)):
@@ -154,6 +156,17 @@ def transpose_coordinatematrix(mat):
     new_entries = mat.entries.map(lambda entry: (entry.j, entry.i, entry.value))
     return CoordinateMatrix(new_entries)
 
+def coordinate_matrix_diagonal(mat):
+    size = min(mat.numRows(), mat.numCols())
+    new_entries = mat.entries.filter(
+        lambda entry: entry.i == entry.j).map(
+        lambda entry: (entry.i, entry.value)).collect()
+    return Vectors.sparse(size, new_entries)
+
+def test_coordinate_matrix_diagonal():
+    mat = ndarr_to_coord_array(np.array([[1, 0], [0, .5]]))
+    assert coordinate_matrix_diagonal(mat) == Vectors.sparse(2, {0: 1.0, 1: 0.5})
+
 def test_transpose():
     arr = np.array([[1, 1], [0, 1]], dtype = 'float')
     T = coordinate_matrix_to_ndarr(transpose_coordinatematrix(ndarr_to_coord_array(arr)))
@@ -188,7 +201,7 @@ def ndarray_to_sparse_vector(arr):
 
 def sparse_vector_to_ndarray(vec):
     arr = np.zeros(vec.size)
-    for i, val in zip(v.indices, v.values):
+    for i, val in zip(vec.indices, vec.values):
         arr[i] = val
     return arr
     
@@ -230,7 +243,7 @@ def coordinatematrix_multiply_vector_elementwise(mat, vec):
     vec_entries = vec.entries.map(lambda entry: (entry.i, entry.value))
 
     prod = vec_entries.join(mat_entries).map(lambda tup: MatrixEntry(tup[0], tup[1][1][0], tup[1][0] * tup[1][1][1]))
-    return pyspark.mllib.linalg.distributed.CoordinateMatrix(prod)<Paste>
+    return pyspark.mllib.linalg.distributed.CoordinateMatrix(prod)
 
 def coordinateMatrixElementwise(mat, op):
     """
@@ -238,6 +251,14 @@ def coordinateMatrixElementwise(mat, op):
     """
     new_entries = mat.entries.map(lambda entry: MatrixEntry(entry.i, entry.j, op(entry.value)))
     return pyspark.mllib.linalg.distributed.CoordinateMatrix(new_entries)
+
+def sparse_vector_elementwise(vec, op):
+    new_entries = [(i, op(val)) for i, val in zip(vec.indices, vec.values)]
+    return Vectors.sparse(vec.size, new_entries)
+
+def test_sparse_vector_elementwise():
+    np.all(np.isclose(sparse_vector_to_ndarray(sparse_vector_elementwise(ndarray_to_sparse_vector(np.array([1, 2, 3])),
+        lambda elt: np.sqrt(elt))), np.array([ 1.        ,  1.41421356,  1.73205081])))
 
 def coordinateMatrixElementwiseMultiplication(mat, scalar):
     """
