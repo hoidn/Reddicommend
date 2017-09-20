@@ -9,11 +9,8 @@ def similarity_matrix(activity):
     sim = la.coordinateMatrixMultiply(
         activity,
         la.transpose_coordinatematrix(activity))
-    print 'sim', la.coordinate_matrix_to_ndarr(sim)
     diag =  la.coordinate_matrix_diagonal(sim)
-    print 'diag', diag
     norms = la.sparse_vector_elementwise(diag, lambda num: np.sqrt(num))
-    print la.sparse_vector_to_ndarray(norms)
 
     sim_normed = la.coordinate_matrix_divide_by_sparse_vector(
             sim, norms)
@@ -40,3 +37,14 @@ def test_similarity_matrix():
            [ 0.89499209,  0.74443305,  0.83284528,  1.        ,  0.78808545],
            [ 0.81681218,  0.49754955,  0.74795564,  0.78808545,  1.        ]])
     assert np.all(np.isclose(la.coordinate_matrix_to_ndarr(similarity_matrix(la.ndarr_to_coord_array(input))), expected))
+
+
+def idx_to_subreddit(idx, subreddit_mapper):
+    return subreddit_mapper[idx + 1]
+
+def subreddit_to_idx(sub, idx_mapper):
+    return idx_mapper[sub] - 1
+
+def top_k_subs(sim, idx, k = 6):
+    movie_row = la.coordinate_matrix_to_ndarr(la.coordinatematrix_get_row(sim, idx))
+    return [idx_to_subreddit(x) for x in np.argsort(movie_row)[:-k - 1: -1]]
