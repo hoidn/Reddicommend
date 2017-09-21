@@ -156,13 +156,13 @@ def coordinatematrix_get_row(mat, i):
 
 def coordinatematrix_sort_rows(mat, elts_per_row = 10):
     """
-    Return a list of lists, equivalent to the output of np.argsort but in reversed order, and including only elts_per_row elements per row.
+    Return a dict mapping row indices to a list of column indices that sorts the row in reverse order. Only elts_per_row indices are included per row.
     """
-    return mat.entries.map(lambda x: (x.i, [(x.j, x.value)]))\
+    return dict(mat.entries.map(lambda x: (x.i, [(x.j, x.value)]))\
         .reduceByKey(add)\
         .sortByKey()\
-        .map(lambda row: map(lambda tup: tup[0], sorted(row[1], key = lambda tup: -tup[1]))[:elts_per_row]).persist(pyspark.storagelevel.StorageLevel.MEMORY_AND_DISK_SER)\
-        .collect()
+        .map(lambda row: (row[0], map(lambda tup: tup[0], sorted(row[1], key = lambda tup: -tup[1]))[:elts_per_row])).persist(pyspark.storagelevel.StorageLevel.MEMORY_AND_DISK_SER)\
+        .collect())
     
 
 
