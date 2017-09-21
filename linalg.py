@@ -160,7 +160,8 @@ def coordinatematrix_sort_rows(mat, elts_per_row = 10):
     """
     return mat.entries.map(lambda x: (x.i, [(x.j, x.value)]))\
         .reduceByKey(add)\
-        .map(lambda row: map(lambda tup: tup[0], sorted(row[1], key = lambda tup: -tup[1]))[:elts_per_row])\
+        .sortByKey()\
+        .map(lambda row: map(lambda tup: tup[0], sorted(row[1], key = lambda tup: -tup[1]))[:elts_per_row]).persist(pyspark.storagelevel.StorageLevel.MEMORY_AND_DISK_SER)\
         .collect()
     
 
