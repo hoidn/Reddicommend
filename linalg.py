@@ -27,19 +27,21 @@ test_coordmat2 = ndarr_to_coord_array(test_array2)
 test_coordmat2_T = ndarr_to_coord_array(test_array2.T)
 
 # TODO: check that zero entries are correctly filtered
-def coordinateMatrixMultiply(leftmat, rightmat):
+def coordinateMatrixMultiply(leftmat, rightmat, zero_threshold = 0.):
     m = leftmat.entries.map(lambda entry: (entry.j, (entry.i, entry.value)))
     n = rightmat.entries.map(lambda entry: (entry.i, (entry.j, entry.value)))
     product_entries = m.join(n)\
     .map(lambda tup: ((tup[1][0][0], tup[1][1][0]), (tup[1][0][1] * tup[1][1][1])))\
+    .filter(lambda tup: abs(tup[1]) >= zero_threshold)\
     .reduceByKey(add)\
+    .filter(lambda tup: abs(tup[1]) >= zero_threshold)\
     .map(lambda record: MatrixEntry(record[0][0], record[0][1], record[1]))
     
     return pyspark.mllib.linalg.distributed.CoordinateMatrix(product_entries)
 
-def eval_matrix_binop(ndarr1, ndarr2, op):
+def eval_matrix_binop(ndarr1, ndarr2, op, **kwargs):
     cmat = op(ndarr_to_coord_array(ndarr1),
-             ndarr_to_coord_array(ndarr2))
+             ndarr_to_coord_array(ndarr2), **kwargs)
     ndmat = coordinate_matrix_to_ndarr(cmat)
     return cmat, ndmat
 
@@ -149,7 +151,18 @@ def sort_row_indices_by_distance(mat, vec):
 
 def coordinatematrix_get_row(mat, i):
     return pyspark.mllib.linalg.distributed.CoordinateMatrix(
-                    mat.entries.filter(lambda entry: entry.i == i))
+                    mat.entries.filter(lambda entry: entry.i == i)\
+                    .map(lambda entry: MatrixEntry(0, entry.j, entry.value)))
+
+def coordinatematrix_sort_rows(mat, elts_per_row = 10):
+    """
+    Return a list of lists, equivalent to the output of np.argsort but in reversed order, and including only elts_per_row elements per row.
+    """
+    return mat.entries.map(lambda x: (x.i, [(x.j, x.value)]))\
+        .reduceByKey(add)\
+        .map(lambda row: map(lambda tup: tup[0], sorted(row[1], key = lambda tup: -tup[1]))[:elts_per_row])\
+        .collect()
+    
 
 
 def transpose_coordinatematrix(mat):

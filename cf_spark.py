@@ -31,6 +31,7 @@ def test_similarity_matrix():
          0.30400444],
        [ 0.78897855,  0.06087785,  0.42894637,  0.99971801,  0.63067103,
          0.19627554]])
+
     expected = np.array([[ 1.        ,  0.75002058,  0.73386657,  0.89499209,  0.81681218],
            [ 0.75002058,  1.        ,  0.73751518,  0.74443305,  0.49754955],
            [ 0.73386657,  0.73751518,  1.        ,  0.83284528,  0.74795564],
@@ -45,6 +46,7 @@ def idx_to_subreddit(idx, subreddit_mapper):
 def subreddit_to_idx(sub, idx_mapper):
     return idx_mapper[sub] - 1
 
-def top_k_subs(sim, idx, k = 6):
-    movie_row = la.coordinate_matrix_to_ndarr(la.coordinatematrix_get_row(sim, idx))
-    return [idx_to_subreddit(x) for x in np.argsort(movie_row)[:-k - 1: -1]]
+def spark_top_k_subs(sim, idx, subreddit_mapper, k = 6):
+    row = la.coordinatematrix_get_row(sim, idx)
+    movie_row = la.coordinate_matrix_to_ndarr(row)[0]
+    return [idx_to_subreddit(x, subreddit_mapper) for x in np.argsort(movie_row)[:-k - 1: -1]]
