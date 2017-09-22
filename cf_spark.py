@@ -46,8 +46,11 @@ def test_similarity_matrix():
 #    movie_row = la.coordinate_matrix_to_ndarr(row)[0]
 #    return [idx_to_subreddit(x, subreddit_mapper) for x in np.argsort(movie_row)[:-k - 1: -1]]
 
-    
 def spark_top_k_subs(activity, subreddit, subreddit_to_idx, k = 5):
     sim = similarity_matrix(activity)
-    row = la.coordinatematrix_sort_rows(sim, k)[subreddit_to_idx(subreddit)]
-    return [subreddit_to_idx.inverse(int(x)) for x in row]
+    try:
+        row = la.coordinatematrix_sort_rows(sim, k)[subreddit_to_idx(subreddit)]
+        return [subreddit_to_idx.inverse(int(x)) for x in row]
+    except KeyError:
+        print 'key not found', subreddit_to_idx(subreddit)
+    
