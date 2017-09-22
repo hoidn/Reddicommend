@@ -6,6 +6,18 @@ from operator import add
 from pyspark.mllib.linalg import Vectors, ArrayType
 import numpy as np
 
+def memo(f):
+    """
+    memoize, using object ids as cache keys
+    """
+    cache = {}
+    def new_f(*args, **kwargs):
+        ids = tuple(map(id, args)) + tuple(map(id, kwargs))
+        if ids not in cache:
+            cache[ids] = f(*args, **kwargs)
+        return cache[ids]
+    return new_f
+
 sc = pyspark.context.SparkContext.getOrCreate()
 
 def ndarr_to_coord_array(arr):
@@ -35,7 +47,8 @@ def coordinateMatrixMultiply(leftmat, rightmat, zero_threshold = 0.):
     .filter(lambda tup: abs(tup[1]) >= zero_threshold)\
     .reduceByKey(add)\
     .filter(lambda tup: abs(tup[1]) >= zero_threshold)\
-    .map(lambda record: MatrixEntry(record[0][0], record[0][1], record[1]))
+    .map(lambda record: MatrixEntry(record[0][0], record[0][1], record[1]))\
+    .persist(pyspark.storagelevel.StorageLevel.MEMORY_AND_DISK_SER)
     
     return pyspark.mllib.linalg.distributed.CoordinateMatrix(product_entries)
 
@@ -154,6 +167,7 @@ def coordinatematrix_get_row(mat, i):
                     mat.entries.filter(lambda entry: entry.i == i)\
                     .map(lambda entry: MatrixEntry(0, entry.j, entry.value)))
 
+@memo
 def coordinatematrix_sort_rows(mat, elts_per_row = 10):
     """
     Return a dict mapping row indices to a list of column indices that sorts the row in reverse order. Only elts_per_row indices are included per row.
@@ -163,7 +177,6 @@ def coordinatematrix_sort_rows(mat, elts_per_row = 10):
         .sortByKey()\
         .map(lambda row: (row[0], map(lambda tup: tup[0], sorted(row[1], key = lambda tup: -tup[1]))[:elts_per_row])).persist(pyspark.storagelevel.StorageLevel.MEMORY_AND_DISK_SER)\
         .collect())
-    
 
 
 def transpose_coordinatematrix(mat):
@@ -219,6 +232,7 @@ def sparse_vector_to_ndarray(vec):
         arr[i] = val
     return arr
     
+@memo
 def coordinate_matrix_to_ndarr(mat):
     size = mat.entries.count()
     elts = mat.entries.take(size)

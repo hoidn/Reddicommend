@@ -5,6 +5,7 @@ import linalg as la
 reload(la)
 epsilon = 1e-9
 
+@la.memo
 def similarity_matrix(activity):
     sim = la.coordinateMatrixMultiply(
         activity,
@@ -39,18 +40,14 @@ def test_similarity_matrix():
            [ 0.81681218,  0.49754955,  0.74795564,  0.78808545,  1.        ]])
     assert np.all(np.isclose(la.coordinate_matrix_to_ndarr(similarity_matrix(la.ndarr_to_coord_array(input))), expected))
 
-def idx_to_subreddit(idx, subreddit_mapper):
-    return subreddit_mapper[idx + 1]
 
-def subreddit_to_idx(sub, idx_mapper):
-    return idx_mapper[sub] - 1
+#def spark_top_k_subs(sim, idx, subreddit_mapper, idx_to_subreddit, k = 6):
+#    row = la.coordinatematrix_get_row(sim, idx)
+#    movie_row = la.coordinate_matrix_to_ndarr(row)[0]
+#    return [idx_to_subreddit(x, subreddit_mapper) for x in np.argsort(movie_row)[:-k - 1: -1]]
 
-def spark_top_k_subs(sim, idx, subreddit_mapper, k = 6):
-    row = la.coordinatematrix_get_row(sim, idx)
-    movie_row = la.coordinate_matrix_to_ndarr(row)[0]
-    return [idx_to_subreddit(x, subreddit_mapper) for x in np.argsort(movie_row)[:-k - 1: -1]]
-
-def spark_top_k_subs2(sim, idx, subreddit_mapper, k = 6):
-    row = la.coordinatematrix_sort_rows(sim, k)[idx]
-    return [idx_to_subreddit(int(x), subreddit_mapper) for x in row]
     
+def spark_top_k_subs(activity, subreddit, subreddit_to_idx, k = 5):
+    sim = similarity_matrix(activity)
+    row = la.coordinatematrix_sort_rows(sim, k)[subreddit_to_idx(subreddit)]
+    return [subreddit_to_idx.inverse(int(x)) for x in row]

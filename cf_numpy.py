@@ -1,4 +1,5 @@
 import numpy as np
+import linalg as la
 
 state = {'item_similarity': None}
 
@@ -53,14 +54,10 @@ def init(ndmat, subreddit_mapper):
     state['idx_mapper'] = {v: k for k, v in subreddit_mapper.iteritems()}
 
 
-def idx_to_subreddit(idx):
-    return state['subreddit_mapper'][idx + 1]
+def top_k_subs(tf_ij, movie_idx, idx_to_subreddit, k=6):
+    ndmat =  la.coordinate_matrix_to_ndarr(tf_ij).T
+    sim = fast_similarity(ndmat, kind = 'item')
+    return [idx_to_subreddit(x) for x in np.argsort(sim[movie_idx,:])[:-k-1:-1]]
 
-def subreddit_to_idx(sub):
-    return state['idx_mapper'][sub] - 1
-
-def top_k_subs(movie_idx, k=6):
-    return [idx_to_subreddit(x) for x in np.argsort(state['item_similarity_full'][movie_idx,:])[:-k-1:-1]]
-
-def related_subs(sub_name):
-    return top_k_subs(subreddit_to_idx(sub_name), k = 10)
+def related_subs(tf_ij, sub_name, subreddit_to_idx, k = 5):
+    return top_k_subs(tf_ij, subreddit_to_idx(sub_name), subreddit_to_idx.inverse, k = k)
