@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block body %}
+<script type="text/javascript">
+  $(function() {
+    var submit_form = function(e) {
+      $.getJSON($SCRIPT_ROOT + '/_query_related_subs', {
+        sub: $('input[name="sub"]').val(),
+      }, function(data) {
+        var obj = $('#result').text(data.result);
+	obj.html(obj.html().replace(/\n/g,'<br/>'));
+	var tab ='<span style="display:inline-block; width: 10;"></span>'
+	obj.html(obj.html().replace(/\n/g,'<br/>'));
+	obj.html(obj.html().replace(/\t/g,tab));
+      });
+      return false;
+    };
+
+    $('input[type=text]').bind('keyup', function(e) {
+    submit_form(e);
+    });
+
+    $('input[name=sub]').focus();
+  });
+</script>
+<h1>Subreddit recommendations</h1>
+<p>
+  <input type="text" size="50" id='sub' name="sub"> 
+  <span id="result">?</span>
+{% endblock %}
