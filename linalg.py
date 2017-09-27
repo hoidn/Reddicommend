@@ -44,12 +44,10 @@ def coordinateMatrixMultiply(leftmat, rightmat, zero_threshold = 0.):
     n = rightmat.entries.map(lambda entry: (entry.i, (entry.j, entry.value)))
     product_entries = m.join(n)\
     .map(lambda tup: ((tup[1][0][0], tup[1][1][0]), (tup[1][0][1] * tup[1][1][1])))\
-    .filter(lambda tup: abs(tup[1]) >= zero_threshold)\
     .reduceByKey(add)\
     .filter(lambda tup: abs(tup[1]) >= zero_threshold)\
-    .map(lambda record: MatrixEntry(record[0][0], record[0][1], record[1]))\
-    .persist(pyspark.storagelevel.StorageLevel.MEMORY_AND_DISK_SER)
-    
+    .map(lambda record: MatrixEntry(record[0][0], record[0][1], record[1]))
+
     return pyspark.mllib.linalg.distributed.CoordinateMatrix(product_entries)
 
 def eval_matrix_binop(ndarr1, ndarr2, op, **kwargs):
