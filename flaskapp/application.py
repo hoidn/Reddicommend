@@ -1,6 +1,6 @@
 import db
 
-db.init('redicommend3.db')
+db.init('redicommend5.db')
 
 # -*- coding: utf-8 -*-
 """

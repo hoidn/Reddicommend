@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
+<body>
 <script type="text/javascript">
   $(function() {
     var submit_form = function(e) {
@@ -22,8 +23,9 @@
     $('input[name=sub]').focus();
   });
 </script>
-<h1>Subreddit recommendations</h1>
+<h2>Subreddit recommendations</h2>
 <p>
   <input type="text" size="50" id='sub' name="sub"> 
   <span id="result">?</span>
+</body>
 {% endblock %}
