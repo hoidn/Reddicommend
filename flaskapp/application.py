@@ -1,5 +1,7 @@
 import db
 
+db.init('redicommend3.db')
+
 # -*- coding: utf-8 -*-
 """
     :copyright: (c) 2015 by Armin Ronacher.

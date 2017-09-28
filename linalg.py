@@ -75,6 +75,13 @@ def coordinateMatrixAdd(leftmat, rightmat, scalar):
     #return matsum
     return pyspark.mllib.linalg.distributed.CoordinateMatrix(matsum)
 
+def coordinateMatrixAddConstant(mat, scalar):
+    """
+    Add scalar ONLY to nonzero elements of mat
+    """
+    matsum = mat.entries.map(lambda entry: MatrixEntry(entry.i, entry.j, entry.value + scalar))
+    return pyspark.mllib.linalg.distributed.CoordinateMatrix(matsum)
+
 def test_add():
     m = coordinate_matrix_to_ndarr(
         coordinateMatrixAdd(ndarr_to_coord_array(test_array3), ndarr_to_coord_array(test_array2), -2))
@@ -294,3 +301,16 @@ def coordinateMatrixElementwiseMultiplication(mat, scalar):
     return pyspark.mllib.linalg.distributed.CoordinateMatrix(new_entries)
 
 
+def coordinateMatrixElementwiseMatrixProduct(mat1, mat2):
+    """
+    return scalar * mat
+    """
+    m1 = mat1.entries.map(lambda entry: ((entry.i, entry.j), entry.value))
+    m2 = mat2.entries.map(lambda entry: ((entry.i, entry.j), entry.value))
+
+    new_entries = m1.join(m2).map(lambda tup: MatrixEntry(tup[0][0], tup[0][1], tup[1][0] * tup[1][1]))
+
+    return pyspark.mllib.linalg.distributed.CoordinateMatrix(new_entries)
+
+#a1, a2 = np.array([[1., 2.], [3., 0.]]), 2 * np.ones((2, 2))
+#linalg.eval_matrix_binop(a1, a2, linalg.coordinateMatrixElementwiseMatrixProduct)
