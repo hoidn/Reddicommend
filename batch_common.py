@@ -85,8 +85,8 @@ def load_and_preprocess(json_uri, num_subreddit, user_min_active_subreddits = 4,
 def gen_frequency_matrix(npartitions = 18, bias_correction = False):
     # subreddit-activity matrix
     bare_occurrences = sqlContext.sql("""select * from bare_occurrences""").repartition(npartitions)
-    tf_ij = CoordinateMatrix(bare_occurrences.rdd.map(
-            lambda row: (row.ordered_id, (row.uid, row.tally)))\
-        .sortByKey().map(lambda entry: (entry[0] - 1, entry[1][0], entry[1][1])))
+    rows = bare_occurrences.rdd.map(
+            lambda row: (row.ordered_id, (row.uid, row.tally))).sortByKey()
+    tf_ij = CoordinateMatrix(rows.map(lambda entry: (entry[0] - 1, entry[1][0], entry[1][1])))
     
-    return tf_ij
+    return rows, tf_ij

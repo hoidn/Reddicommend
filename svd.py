@@ -110,5 +110,19 @@ def svd_correlation_matrix(arr, k = 100, epsilon=1e-9, normalize = True):
     else:
         return np.diagonal(S), sim
 
+def compute_new(arr, weightvec, k = 100):
+    U, S, Vt = computeSVD(csr_matrix(arr), k)
+    weighted = weightvec * np.log(1. + arr)
+
+    return np.dot(weighted, np.dot(U, np.linalg.inv(S)))
+
+def find_neighbors(arr_reduced, U, S, Vt):
+    lowrank_subs = np.dot(U, S)
+    distance_ranking = np.argsort(
+        np.array([cosine_similarity(arr_reduced, row)
+        for row in lowrank_subs]))
+    return distance_ranking
+
 from pyspark.mllib.linalg import Vectors
 from pyspark.mllib.linalg.distributed import RowMatrix
+from sklearn.metrics.pairwise import cosine_similarity
