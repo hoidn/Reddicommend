@@ -106,9 +106,9 @@ def svd_correlation_matrix(arr, k = 100, epsilon=1e-9, normalize = True):
     diag = np.diagonal(sim)
     if normalize:
         norms = np.array([np.sqrt(np.abs(diag))])
-        return np.diagonal(S), sim / norms / norms.T
+        return np.diagonal(S), sim / norms / norms.T, lowrank_subs
     else:
-        return np.diagonal(S), sim
+        return np.diagonal(S), sim, lowrank_subs
 
 def compute_new(arr, weightvec, k = 100):
     U, S, Vt = computeSVD(csr_matrix(arr), k)
