@@ -2,6 +2,8 @@ import linalg
 from batch_common import *
 import svd
 import sqlite3
+sc = pyspark.SparkContext.getOrCreate()
+sqlContext= pyspark.sql.SQLContext.getOrCreate(sc)
 
 
 #json_uri = "s3a://insight-ohoidn/sample3.json"
@@ -25,7 +27,7 @@ def df_most_active_subreddits(num_subreddit = 50000, npartitions = 18):
             from occurrences
             group by rid, subreddit))
         where ordered_id<=%d
-""" % num_subreddit).persist(StorageLevel.MEMORY_AND_DISK_SER)
+""" % num_subreddit).persist(pyspark.StorageLevel.MEMORY_AND_DISK_SER)
     most_active.registerTempTable('most_active')
     return most_active.repartition(npartitions)
 
@@ -41,11 +43,13 @@ def df_valid_users(min_subreddits = 2, max_subreddits = 20):
             where subreddit in (select subreddit from most_active))
         group by author
         order by count desc)
-    where count>=%d and count<=%d""" % (min_subreddits, max_subreddits)).persist(StorageLevel.MEMORY_AND_DISK_SER)
+    where count>=%d and count<=%d""" % (min_subreddits, max_subreddits)).persist(pyspark.StorageLevel.MEMORY_AND_DISK_SER)
     most_active_users.registerTempTable('most_active_users')
     return most_active_users
 
-def load_and_preprocess(json_uri, num_subreddit, user_min_active_subreddits = 4, user_max_active_subreddits = 20):
+def load_and_preprocess(json_uri = json_uri, num_subreddit = numreddits,
+        user_min_active_subreddits = user_min_active_subreddits,
+        user_max_active_subreddits = user_max_active_subreddits):
     """
     Load json and do preprocessing via some SQL queries
     """
@@ -59,7 +63,7 @@ def load_and_preprocess(json_uri, num_subreddit, user_min_active_subreddits = 4,
     from test
     group by subreddit, author)
     where tally!=0
-    """).persist(StorageLevel.MEMORY_AND_DISK_SER)
+    """).persist(pyspark.StorageLevel.MEMORY_AND_DISK_SER)
     occurrences.registerTempTable('occurrences')
         
     df_most_active_subreddits(num_subreddit)
@@ -79,13 +83,13 @@ def load_and_preprocess(json_uri, num_subreddit, user_min_active_subreddits = 4,
         where author in (select author from most_active_users)
         group by test2.subreddit, test2.ordered_id, author)
     where tally!=0
-    """).persist(StorageLevel.MEMORY_AND_DISK_SER)
+    """).persist(pyspark.StorageLevel.MEMORY_AND_DISK_SER)
     occurrences_pruned.registerTempTable('occurrences_pruned')
     
     bare_occurrences = sqlContext.sql("""
     select ordered_id, uid, tally
     from occurrences_pruned
-    """).persist(StorageLevel.MEMORY_AND_DISK_SER)
+    """).persist(pyspark.StorageLevel.MEMORY_AND_DISK_SER)
     bare_occurrences.registerTempTable('bare_occurrences')
     
 def gen_frequency_matrix(npartitions = 18, bias_correction = False):
@@ -182,4 +186,36 @@ def svd_output_to_db(sim, lowrank_subreddit_array):
 
 def empty_table():
     cursor.execute("delete FROM reddit")
+    connection.commit()
+
+def get_author_subs():
+    """
+    Run load_and_preprocess first.
+    """
+    occurrences_pruned = sqlContext.sql("""
+    select *
+    from  (SELECT test2.subreddit, author, test2.ordered_id, sum(score) as tally,\
+        sum(abs(score)) as activity, dense_rank() over (order by author desc) as uid
+        from test2
+        where author in (select author from most_active_users)
+        group by test2.subreddit, test2.ordered_id, author)
+    where tally!=0
+    """).persist(pyspark.StorageLevel.MEMORY_AND_DISK_SER)
+    author_subs = occurrences_pruned.rdd.map(lambda row: (row.author, [row.subreddit])).reduceByKey(add)
+    list_author_subs = author_subs.collect()
+    return list_author_subs
+
+def create_authors_table():
+    sql_command = """
+    CREATE TABLE authors ( 
+    key VARCHAR(30), 
+    author VARCHAR(150));"""
+    cursor.execute(sql_command)
+    connection.commit()
+
+def author_subreddits_to_db(list_author_subs):
+    for tup in list_author_subs:
+        sql_command = """INSERT INTO authors (key, author)
+        VALUES ("%s", "%s");""" % (tup[0], ','.join(tup[1]))
+        cursor.execute(sql_command)
     connection.commit()
