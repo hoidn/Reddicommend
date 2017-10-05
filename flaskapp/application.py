@@ -49,10 +49,45 @@ def query_author_related_subs():
     author = request.args.get('author', 0, type=str)
     return jsonify(result=process_author_query(author))
 
+@app.route('/_get_scatter_data')
+def _get_scatter_data():
+#    data = dict(
+#        x=[1, 2, 3, 4],
+#        y=[10, 11, 12, 13],
+#        mode='markers',
+#        marker=dict(
+#            size=[40, 60, 80, 100],
+#        )
+#    )
+    N = 5000
+    scale = 10
+    import numpy as np
+    x = list(np.random.random(N))
+    y = list(np.random.random(N))
+    size = list(scale * np.random.random(N))
+    text = N * ['aaaa']
+    color = ['rgb(%d, %d, %d)' % (np.random.random_integers(255),
+        np.random.random_integers(255),
+        np.random.random_integers(255)) for _ in xrange(N)]
+    data = dict(
+        x=x,
+        y=y,
+        mode='markers',
+        text = text,
+        marker=dict(
+            color=color,
+            size=size,
+        )
+    )
+    return jsonify(data)
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/visualization')
+def visualization():
+    return render_template('visualization.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

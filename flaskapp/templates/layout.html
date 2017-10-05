@@ -1,5 +1,5 @@
 <!doctype html>
-<title>Redicommend</title>
+<title>Reddicommend</title>
     <head>
       <!--Import Google Icon Font-->
       <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -16,5 +16,14 @@
 <script type="text/javascript">
   var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
+  <nav>
+    <div class="nav-wrapper">
+      <a href="#" class="brand-logo right">Reddicommend</a>
+      <ul id="nav-mobile" class="left hide-on-med-and-down">
+        <li><a href="/">Recommendations</a></li>
+        <li><a href="visualization">Visualization</a></li>
+      </ul>
+    </div>
+  </nav>
 {% block body %}{% endblock %}
 
