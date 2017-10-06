@@ -1,6 +1,8 @@
 import db
 import numpy as np
 db.init('redicommend10.db')
+db.related_subs_from_sql()
+db.get_author_visited_subs()
 
 N = 5000
 scale = 10
@@ -37,7 +39,7 @@ def process_query(search_term):
         related = db.related_subs_from_sql()[search_term]['related']
         header = "subs related to r/%s:" % search_term + '\n'
         rest = related.replace(', ', '\n')
-    except IndexError:
+    except KeyError:
         rest = '' 
         if search_term:
             header = "%s: no such subreddit" % search_term
@@ -51,7 +53,7 @@ def process_author_query(author):
         related = db.get_author_recommended_subs(author)
         header = "recommended subs of u/%s:" % author + '\n'
         rest = related.replace(', ', '\n')
-    except IndexError:
+    except KeyError:
         rest = ''
         if author:
             header = "%s: no such user" % author

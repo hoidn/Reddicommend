@@ -1,6 +1,7 @@
 # TODO: it appears that importing a module that imports pyspark
 # from jupyter is problematic. Find out what the underlying is.
 
+import pdb
 import numpy as np
 import sqlite3
 
@@ -23,17 +24,6 @@ def init(dbpath = "redicommend10.db"):
     dbmap['connection'] = connection
     cursor = connection.cursor()
     dbmap['cursor'] = cursor
-
-#def init2(dbpath = "redicommend6.db"):
-#    connection = sqlite3.connect(dbpath)
-#    dbmap['connection2'] = connection
-#    cursor = connection.cursor()
-#    dbmap['cursor2'] = cursor
-
-#create_command = """
-#CREATE TABLE reddit ( 
-#key VARCHAR(30), 
-#related VARCHAR(150));"""
 
 
 def insert_one(subreddit, string):
@@ -71,12 +61,11 @@ def get_author_visited_subs():
 def get_author_recommended_subs(author):
     subs = []
     author_visited = get_author_visited_subs()[author][0]
-    #print author_visited
     author_visited = author_visited.split(',')
     for sub in author_visited:
         try:
             subs += related_subs_from_sql()[sub]['related'].split(',')
-        except IndexError, KeyError:
+        except KeyError:
             pass
     recommendations = list(np.random.choice(subs, 20, replace = False))
     return ', '.join(recommendations)
