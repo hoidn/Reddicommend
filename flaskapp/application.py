@@ -1,7 +1,27 @@
 import db
+import numpy as np
+db.init('redicommend10.db')
 
-db.init('redicommend5.db')
-db.init2()
+N = 5000
+scale = 10
+x = list(np.random.random(N))
+y = list(np.random.random(N))
+size = list(scale * np.random.random(N))
+text = N * ['aaaa']
+color = ['rgb(%d, %d, %d)' % (np.random.random_integers(255),
+    np.random.random_integers(255),
+    np.random.random_integers(255)) for _ in xrange(N)]
+data = dict(
+    x=x,
+    y=y,
+    mode='markers',
+    text = text,
+    marker=dict(
+        color=color,
+        size=size,
+    )
+)
+
 
 # -*- coding: utf-8 -*-
 """
@@ -14,7 +34,7 @@ app = Flask(__name__)
 def process_query(search_term):
     # TODO: rewrite db.related_subs_from_sql
     try:
-        related = db.related_subs_from_sql(search_term)
+        related = db.related_subs_from_sql()[search_term]['related']
         header = "subs related to r/%s:" % search_term + '\n'
         rest = related.replace(', ', '\n')
     except IndexError:
@@ -59,26 +79,6 @@ def _get_scatter_data():
 #            size=[40, 60, 80, 100],
 #        )
 #    )
-    N = 5000
-    scale = 10
-    import numpy as np
-    x = list(np.random.random(N))
-    y = list(np.random.random(N))
-    size = list(scale * np.random.random(N))
-    text = N * ['aaaa']
-    color = ['rgb(%d, %d, %d)' % (np.random.random_integers(255),
-        np.random.random_integers(255),
-        np.random.random_integers(255)) for _ in xrange(N)]
-    data = dict(
-        x=x,
-        y=y,
-        mode='markers',
-        text = text,
-        marker=dict(
-            color=color,
-            size=size,
-        )
-    )
     return jsonify(data)
 
 @app.route('/')

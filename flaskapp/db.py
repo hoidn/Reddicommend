@@ -70,12 +70,13 @@ def get_author_visited_subs():
 
 def get_author_recommended_subs(author):
     subs = []
-    author_visited = get_author_visited_subs()[author]
+    author_visited = get_author_visited_subs()[author][0]
+    #print author_visited
     author_visited = author_visited.split(',')
     for sub in author_visited:
         try:
             subs += related_subs_from_sql()[sub]['related'].split(',')
-        except IndexError:
+        except IndexError, KeyError:
             pass
     recommendations = list(np.random.choice(subs, 20, replace = False))
     return ', '.join(recommendations)
