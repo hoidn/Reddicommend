@@ -58,6 +58,52 @@ def get_author_visited_subs():
     author_sub_recommendation_dict = {v[0]: v[1:] for v in result}
     return author_sub_recommendation_dict
 
+def random_color(N):
+    color = ['rgb(%d, %d, %d)' % (np.random.random_integers(255),
+        np.random.random_integers(255),
+        np.random.random_integers(255)) for _ in xrange(N)]
+    return color
+
+@memo
+def get_svd_projection_plot_data():
+    scale = 6e-2
+    import numpy as np
+    import copy
+    d = copy.deepcopy(related_subs_from_sql())
+    # TODO: temporary hack, figure out how to include AskReddit
+    # without it screwing up the presentation
+    try:
+        del d['AskReddit']
+    except:
+        pass
+    subs = d.keys()
+    vectors = [d[s]['vector'] for s in subs]
+    vector_norms = np.array([np.linalg.norm(v) for v in vectors])
+
+    vectors_ndarr = np.array(vectors)
+    vn1 = vectors_ndarr[:, -1] / vector_norms
+    vn1 -= np.min(vn1)
+    vn2 = vectors_ndarr[:, -2] / vector_norms
+    vn2 -= np.min(vn2)
+    x = map(float, vn1)
+    y = map(float, vn2)
+    size = [scale * float(np.sqrt(d[s]['activity'])) for s in subs]
+    color = random_color(len(subs))
+
+    data = dict(
+        x=x,
+        y=y,
+        mode='markers',
+        type='scatter',
+        text = subs,
+        marker=dict(
+            color=color,
+            size=size,
+        )
+    )
+    return data
+
+
 def get_author_recommended_subs(author):
     subs = []
     author_visited = get_author_visited_subs()[author][0]

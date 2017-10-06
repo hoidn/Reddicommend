@@ -45,7 +45,6 @@ def process_query(search_term):
             header = "%s: no such subreddit" % search_term
         else:
             header = ''
-    #return '\n' + header + rest
     return header + rest
 
 def process_author_query(author):
@@ -73,14 +72,7 @@ def query_author_related_subs():
 
 @app.route('/_get_scatter_data')
 def _get_scatter_data():
-#    data = dict(
-#        x=[1, 2, 3, 4],
-#        y=[10, 11, 12, 13],
-#        mode='markers',
-#        marker=dict(
-#            size=[40, 60, 80, 100],
-#        )
-#    )
+    data = db.get_svd_projection_plot_data()
     return jsonify(data)
 
 @app.route('/')

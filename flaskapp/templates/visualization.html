@@ -6,7 +6,7 @@
 </head>
 <body style="margin:30px;">
 
-<h3>visula</h3>
+<h3>Subreddit Similarity</h3>
 <div id="myDiv" style="width:600px;height:250px;"></div>
 
 <script>
@@ -27,10 +27,15 @@
 //var data = [trace1];
 
 var layout = {
-  title: 'Subreddit Similarity',
   showlegend: false,
-  height: 500,
-  width: 700
+  height: 600,
+  width: 1000,
+  hovermode: 'closest',
+  type: 'scatter',
+  xaxis: {showgrid: false, visible: false},
+  yaxis: {showgrid: false, visible: false},
+  paper_bgcolor: 'rgb(243, 243, 243)',
+  plot_bgcolor: 'rgb(243, 243, 243)'
 };
 
 var plot_data = function (data) {
