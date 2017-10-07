@@ -7,6 +7,5 @@ Using [collaborative filtering](https://en.wikipedia.org/wiki/Collaborative_filt
 TODO: finish this
 
 
-### Pipeline
 ![alt text](https://raw.githubusercontent.com/hoidn/Reddicommend/master/doc/pipeline.jpg)
 

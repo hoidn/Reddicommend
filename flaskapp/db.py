@@ -66,7 +66,7 @@ def random_color(N):
 
 @memo
 def get_svd_projection_plot_data():
-    scale = 6e-2
+    scale = 5e-2
     import numpy as np
     import copy
     d = copy.deepcopy(related_subs_from_sql())
