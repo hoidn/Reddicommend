@@ -11,26 +11,18 @@
 Output of rank 2 truncated singular value decomposition (SVD).
 <p/>
 
+<div id="myDiv" style="width:600px;height:250px;"></div>
+
 <script>
-
-
-
 var layout = {
+  title: 'Subreddit Similarity',
   showlegend: false,
-  height: 600,
-  width: 1000,
-  hovermode: 'closest',
-  type: 'scatter',
-  xaxis: {showgrid: false, visible: false},
-  yaxis: {showgrid: false, visible: false},
-  paper_bgcolor: 'rgb(243, 243, 243)',
-  plot_bgcolor: 'rgb(243, 243, 243)'
+  height: 500,
+  width: 700
 };
-
 var plot_data = function (data) {
     Plotly.newPlot('myDiv', [data], layout);
 }
-
 $.getJSON($SCRIPT_ROOT + '/_get_scatter_data', {
     //sub: $('input[name="sub"]').val(),
     }, function(data) {
