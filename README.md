@@ -8,5 +8,5 @@ TODO: finish this
 
 
 ### Pipeline
-![alt text](https://raw.githubusercontent.com/hoidn/Reddicommend/master/doc/pipeline.pdf)
+![alt text](https://raw.githubusercontent.com/hoidn/Reddicommend/master/doc/pipeline.jpg)
 
